@@ -2,6 +2,7 @@
 using MyNewsWebApi.Handlers;
 using MyNewsWebApi.Infrastructure.IoC;
 using MyNewsWebApi.Services;
+using MyNewsWebApi.Services.Factories;
 
 namespace MyNewsWebApi;
 
@@ -21,5 +22,7 @@ public class MyNewsWebApiModule : Module
         
         services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
         services.AddSingleton<IStoryService, NewsStoryService>();
+        services.AddMemoryCache();
+        services.AddSingleton<IMemoryCacheEntryOptionsFactory, MemoryCacheEntryOptionsFactory>();
     }
 }

@@ -1,9 +1,11 @@
 using MyNewsWebApi;
+using MyNewsWebApi.Infrastructure;
 using MyNewsWebApi.Infrastructure.IoC;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.RegisterModule<MyNewsWebApiModule>();
+builder.Services.Configure<ApiSettings>(builder.Configuration.GetSection("ApiSettings"));
 
 var app = builder.Build();
 
@@ -16,6 +18,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+//todo: define routings for 
 var summaries = new[]
 {
     "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
