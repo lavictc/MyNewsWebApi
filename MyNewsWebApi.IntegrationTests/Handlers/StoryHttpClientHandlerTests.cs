@@ -11,6 +11,7 @@ public class StoryHttpClientHandlerTests
 
         var ids = await handler.GetIds();
 
+        Assert.NotNull(ids);
         Assert.NotEmpty(ids);
     }
 
@@ -20,6 +21,8 @@ public class StoryHttpClientHandlerTests
         var handler = new StoryHttpClientHandler(new HttpClient { BaseAddress = new Uri("https://hacker-news.firebaseio.com") });
 
         var ids = await handler.GetIds();
+
+        Assert.NotNull(ids);
 
         var entity = await handler.GetEntityById(ids.Last());
 

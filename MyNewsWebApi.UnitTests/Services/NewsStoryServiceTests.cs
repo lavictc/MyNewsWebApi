@@ -1,9 +1,13 @@
 ﻿using AutoMapper;
+using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Options;
 using Moq;
 using MyNewsWebApi.Entities;
 using MyNewsWebApi.Handlers;
+using MyNewsWebApi.Infrastructure;
 using MyNewsWebApi.Models;
 using MyNewsWebApi.Services;
+using MyNewsWebApi.Services.Factories;
 
 namespace MyNewsWebApi.UnitTests.Services;
 
@@ -12,13 +16,19 @@ public class NewsStoryServiceTests
     private readonly Mock<IHttpClientHandler<Story?, int>> _httpClientHandler;
     private readonly Mock<IMapper> _mapper;
     private readonly NewsStoryService _service;
+    private readonly Mock<IMemoryCacheEntryOptionsFactory> _factory;
+    private readonly Mock<IOptions<ApiSettings>> _apiSettings;
 
     public NewsStoryServiceTests()
     {
         _httpClientHandler = new Mock<IHttpClientHandler<Story?, int>>(MockBehavior.Strict);
         _mapper = new Mock<IMapper>(MockBehavior.Strict);
+        _factory = new Mock<IMemoryCacheEntryOptionsFactory>(MockBehavior.Strict);
+        _apiSettings = new Mock<IOptions<ApiSettings>>(MockBehavior.Strict);
 
-        _service = new NewsStoryService(_httpClientHandler.Object, _mapper.Object);
+        var memoryCache = new MemoryCache(new MemoryCacheOptions()); //shame we're unable to mock an IMemoryCache. Can't mock method extensions (IMemoryCache.TryGetValue,  IMemoryCache.Set etc.).
+
+        _service = new NewsStoryService(_httpClientHandler.Object, _mapper.Object, memoryCache, _factory.Object, _apiSettings.Object);
     }
 
     [Fact]
@@ -34,6 +44,8 @@ public class NewsStoryServiceTests
 
         _httpClientHandler.VerifyAll();
         _mapper.VerifyAll();
+        _factory.VerifyAll();
+        _apiSettings.VerifyAll();
     }
 
     [Fact]
@@ -41,11 +53,19 @@ public class NewsStoryServiceTests
     {
         const int storyId = 1;
         Story story = null!;
+        const int cacheSlidingExpirationSeconds = 5;
+        var apiSettings = new ApiSettings { CacheSlidingExpirationSeconds = cacheSlidingExpirationSeconds };
+        var timeSpan = TimeSpan.FromMicroseconds(cacheSlidingExpirationSeconds);
+        var cacheEntryOptions = new MemoryCacheEntryOptions { SlidingExpiration = timeSpan };
 
         IEnumerable<int> storyIds = new List<int> {storyId};
 
         _httpClientHandler.Setup(x => x.GetIds()).ReturnsAsync(storyIds);
         _httpClientHandler.Setup(x => x.GetEntityById(storyId)).ReturnsAsync(story);
+
+        _factory.Setup(x => x.Create(timeSpan)).Returns(cacheEntryOptions);
+
+        _apiSettings.Setup(x => x.Value).Returns(apiSettings);
 
         var result = await _service.GetTheBestStories(10);
 
@@ -53,6 +73,8 @@ public class NewsStoryServiceTests
 
         _httpClientHandler.VerifyAll();
         _mapper.VerifyAll();
+        _factory.VerifyAll();
+        _apiSettings.VerifyAll();
     }
 
     [Fact]
@@ -61,6 +83,10 @@ public class NewsStoryServiceTests
         const int storyId = 1;
         var story = new Story();
         var storyDto = new StoryDto();
+        const int cacheSlidingExpirationSeconds = 5;
+        var timeSpan = TimeSpan.FromMicroseconds(cacheSlidingExpirationSeconds);
+        var cacheEntryOptions = new MemoryCacheEntryOptions { SlidingExpiration = timeSpan };
+        var apiSettings = new ApiSettings{CacheSlidingExpirationSeconds = cacheSlidingExpirationSeconds};
 
         IEnumerable<int> storyIds = new List<int> { storyId };
 
@@ -69,17 +95,28 @@ public class NewsStoryServiceTests
 
         _mapper.Setup(x => x.Map<Story, StoryDto>(story)).Returns(storyDto);
 
+        _factory.Setup(x => x.Create(timeSpan)).Returns(cacheEntryOptions);
+
+        _apiSettings.Setup(x => x.Value).Returns(apiSettings);
+
         var result = await _service.GetTheBestStories(10);
 
         Assert.Equal(storyIds.Count(), result.Count());
 
         _httpClientHandler.VerifyAll();
         _mapper.VerifyAll();
+        _factory.VerifyAll();
+        _apiSettings.VerifyAll();
     }
 
     [Fact]
     public async void Stories_are_ordered_descending_by_score_Test()
     {
+        const int cacheSlidingExpirationSeconds = 5;
+        var apiSettings = new ApiSettings { CacheSlidingExpirationSeconds = cacheSlidingExpirationSeconds };
+        var timeSpan = TimeSpan.FromMicroseconds(cacheSlidingExpirationSeconds);
+        var cacheEntryOptions = new MemoryCacheEntryOptions { SlidingExpiration = timeSpan };
+
         const int storyId1 = 1;
         const int storyId2 = 2;
         const int storyId3 = 3;
@@ -118,6 +155,10 @@ public class NewsStoryServiceTests
         _mapper.InSequence(sequence).Setup(x => x.Map<Story, StoryDto>(story2)).Returns(storyDto2);
         _mapper.InSequence(sequence).Setup(x => x.Map<Story, StoryDto>(story4)).Returns(storyDto4);
 
+        _apiSettings.Setup(x => x.Value).Returns(apiSettings);
+
+        _factory.Setup(x => x.Create(timeSpan)).Returns(cacheEntryOptions);
+
         var result = await _service.GetTheBestStories(5);
 
         var descScores = string.Join(",", result.Select(x => x.Score));
@@ -126,11 +167,18 @@ public class NewsStoryServiceTests
 
         _httpClientHandler.VerifyAll();
         _mapper.VerifyAll();
+        _factory.VerifyAll();
+        _apiSettings.VerifyAll();
     }
 
     [Fact]
     public async void Take_top_three_stories_descending_by_score_Test()
     {
+        const int cacheSlidingExpirationSeconds = 5;
+        var apiSettings = new ApiSettings { CacheSlidingExpirationSeconds = cacheSlidingExpirationSeconds };
+        var timeSpan = TimeSpan.FromMicroseconds(cacheSlidingExpirationSeconds);
+        var cacheEntryOptions = new MemoryCacheEntryOptions { SlidingExpiration = timeSpan };
+
         const int storyId1 = 1;
         const int storyId2 = 2;
         const int storyId3 = 3;
@@ -169,6 +217,10 @@ public class NewsStoryServiceTests
         _mapper.InSequence(sequence).Setup(x => x.Map<Story, StoryDto>(story2)).Returns(storyDto2);
         _mapper.InSequence(sequence).Setup(x => x.Map<Story, StoryDto>(story4)).Returns(storyDto4);
 
+        _apiSettings.Setup(x => x.Value).Returns(apiSettings);
+
+        _factory.Setup(x => x.Create(timeSpan)).Returns(cacheEntryOptions);
+
         var result = await _service.GetTheBestStories(3);
 
         var descScores = string.Join(",", result.Select(x => x.Score));
@@ -177,5 +229,9 @@ public class NewsStoryServiceTests
 
         _httpClientHandler.VerifyAll();
         _mapper.VerifyAll();
+        _factory.VerifyAll();
+        _apiSettings.VerifyAll();
     }
+
+    //todo:test caching
 }
