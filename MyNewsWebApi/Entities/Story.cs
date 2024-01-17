@@ -2,10 +2,10 @@
 
 public class Story
 {
-    public string? Title { get; set; } 
-    public string? Url { get; set; }
-    public string? By { get; set; }
-    public long Time { get; set; }
-    public int  Score { get; set; }
-    public int CommentCount { get; set; }
+    public string? Title { get; init; } 
+    public string? Url { get; init; }
+    public string? By { get; init; }
+    public long Time { get; init; }
+    public int  Score { get; init; }
+    public int CommentCount { get; init; }
 }

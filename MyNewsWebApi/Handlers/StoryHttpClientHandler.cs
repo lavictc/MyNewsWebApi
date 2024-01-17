@@ -6,7 +6,6 @@ public class StoryHttpClientHandler(HttpClient httpClient) : IHttpClientHandler<
 {
     public Task<Story?> GetEntityById(int id)
     {
-        //todo: add memory cache
         return httpClient.GetFromJsonAsync<Story?>($"/v0/item/{id}.json");
     }
 

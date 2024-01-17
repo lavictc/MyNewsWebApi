@@ -2,6 +2,6 @@
 
 public class ApiSettings
 {
-    public string? Name { get; set; }
-    public double CacheSlidingExpirationSeconds { get; set; }
+    public string? Name { get; init; }
+    public double CacheSlidingExpirationSeconds { get; init; }
 }

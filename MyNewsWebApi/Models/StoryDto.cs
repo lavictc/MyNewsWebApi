@@ -5,20 +5,20 @@ namespace MyNewsWebApi.Models;
 public class StoryDto
 {
     [JsonPropertyName("title")]
-    public string? Title { get; set; }
+    public string? Title { get; init; }
 
     [JsonPropertyName("url")]
-    public string? Url { get; set; }
+    public string? Url { get; init; }
 
     [JsonPropertyName("postedBy")]
-    public string? PostedBy { get; set; }
+    public string? PostedBy { get; init; }
 
     [JsonPropertyName("time")]
-    public string? Time { get; set; }
+    public string? Time { get; init; }
 
     [JsonPropertyName("score")]
-    public int Score { get; set; }
+    public int Score { get; init; }
 
     [JsonPropertyName("commentCount")]
-    public int CommentCount { get; set; }
+    public int CommentCount { get; init; }
 }

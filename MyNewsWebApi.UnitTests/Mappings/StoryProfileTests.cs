@@ -19,7 +19,7 @@ public class StoryProfileTests
     [Fact]
     public void Null_Entity_return_null_Dto_Test()
     {
-        Story entity = null;
+        Story entity = null!;
 
         var dto = _mapper?.Map<Story, StoryDto>(entity);
 
@@ -38,7 +38,7 @@ public class StoryProfileTests
     }
 
     [Fact]
-    public void Entity_PostedBy_is_equal_to_Dto_PostedBy_Test()
+    public void Entity_By_is_equal_to_Dto_PostedBy_Test()
     {
         var entity = new Story { By = "carlos l" };
 
