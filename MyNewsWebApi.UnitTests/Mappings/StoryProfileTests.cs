@@ -17,7 +17,7 @@ public class StoryProfileTests
     }
 
     [Fact]
-    public void Null_Entity_return_null_Dto_Test()
+    public void Null_Entity_returns_null_Dto_Test()
     {
         Story entity = null!;
 
@@ -35,6 +35,17 @@ public class StoryProfileTests
 
         Assert.NotNull(dto?.CommentCount);
         Assert.Equal(entity.Kids.Length, dto.CommentCount);
+    }
+
+    [Fact]
+    public void Null_Entity_Kids_is_equal_to_zero_in_dto_Test()
+    {
+        var entity = new Story { Kids = null };
+
+        var dto = _mapper?.Map<Story, StoryDto>(entity);
+
+        Assert.NotNull(dto?.CommentCount);
+        Assert.Equal(0, dto.CommentCount);
     }
 
     [Fact]
