@@ -55,7 +55,7 @@ public class NewsStoryServiceTests
         Story story = null!;
         const int cacheSlidingExpirationSeconds = 5;
         var apiSettings = new ApiSettings { CacheSlidingExpirationSeconds = cacheSlidingExpirationSeconds };
-        var timeSpan = TimeSpan.FromMicroseconds(cacheSlidingExpirationSeconds);
+        var timeSpan = TimeSpan.FromSeconds(cacheSlidingExpirationSeconds);
         var cacheEntryOptions = new MemoryCacheEntryOptions { SlidingExpiration = timeSpan };
 
         IEnumerable<int> storyIds = new List<int> {storyId};
@@ -84,7 +84,7 @@ public class NewsStoryServiceTests
         var story = new Story();
         var storyDto = new StoryDto();
         const int cacheSlidingExpirationSeconds = 5;
-        var timeSpan = TimeSpan.FromMicroseconds(cacheSlidingExpirationSeconds);
+        var timeSpan = TimeSpan.FromSeconds(cacheSlidingExpirationSeconds);
         var cacheEntryOptions = new MemoryCacheEntryOptions { SlidingExpiration = timeSpan };
         var apiSettings = new ApiSettings{CacheSlidingExpirationSeconds = cacheSlidingExpirationSeconds};
 
@@ -114,7 +114,7 @@ public class NewsStoryServiceTests
     {
         const int cacheSlidingExpirationSeconds = 5;
         var apiSettings = new ApiSettings { CacheSlidingExpirationSeconds = cacheSlidingExpirationSeconds };
-        var timeSpan = TimeSpan.FromMicroseconds(cacheSlidingExpirationSeconds);
+        var timeSpan = TimeSpan.FromSeconds(cacheSlidingExpirationSeconds);
         var cacheEntryOptions = new MemoryCacheEntryOptions { SlidingExpiration = timeSpan };
 
         const int storyId1 = 1;
@@ -172,11 +172,11 @@ public class NewsStoryServiceTests
     }
 
     [Fact]
-    public async void Take_top_three_stories_descending_by_score_Test()
+    public async void Take_the_top_three_stories_descending_by_score_Test()
     {
         const int cacheSlidingExpirationSeconds = 5;
         var apiSettings = new ApiSettings { CacheSlidingExpirationSeconds = cacheSlidingExpirationSeconds };
-        var timeSpan = TimeSpan.FromMicroseconds(cacheSlidingExpirationSeconds);
+        var timeSpan = TimeSpan.FromSeconds(cacheSlidingExpirationSeconds);
         var cacheEntryOptions = new MemoryCacheEntryOptions { SlidingExpiration = timeSpan };
 
         const int storyId1 = 1;
@@ -233,5 +233,76 @@ public class NewsStoryServiceTests
         _apiSettings.VerifyAll();
     }
 
-    //todo:test caching
+    [Fact]
+    public async void Upon_a_second_request_a_story_is_retrieved_from_cache_Test()
+    {
+        const int cacheSlidingExpirationSeconds = 60;
+        var apiSettings = new ApiSettings { CacheSlidingExpirationSeconds = cacheSlidingExpirationSeconds };
+        var timeSpan = TimeSpan.FromSeconds(cacheSlidingExpirationSeconds);
+        var cacheEntryOptions = new MemoryCacheEntryOptions { SlidingExpiration = timeSpan };
+
+        const int storyId1 = 1;
+        
+        var story1 = new Story();
+
+        var storyDto1 = new StoryDto { Score = 1 };
+
+        IEnumerable<int> storyIds = new List<int> { storyId1 };
+
+        _httpClientHandler.Setup(x => x.GetIds()).ReturnsAsync(storyIds);
+        _httpClientHandler.Setup(x => x.GetEntityById(storyId1)).ReturnsAsync(story1);
+
+        _mapper.Setup(x => x.Map<Story, StoryDto>(story1)).Returns(storyDto1);
+
+        _apiSettings.Setup(x => x.Value).Returns(apiSettings);
+
+        _factory.Setup(x => x.Create(timeSpan)).Returns(cacheEntryOptions);
+
+        await _service.GetTheBestStories(10); //1st call
+        await _service.GetTheBestStories(10); //2nd call 
+
+        _httpClientHandler.Verify(x => x.GetIds(), Times.Exactly(2));
+        _httpClientHandler.Verify(x => x.GetEntityById(storyId1), Times.Once);
+        _mapper.Verify(x => x.Map<Story, StoryDto>(story1), Times.Exactly(2));
+        _factory.Verify(x => x.Create(timeSpan), Times.Once);
+        _apiSettings.Verify(x => x.Value, Times.Once);
+    }
+
+    [Fact]
+    public async void Upon_a_second_request_a_story_is_retrieved_from_web_request_as_cache_has_expired_Test()
+    {
+        const int cacheSlidingExpirationSeconds = 1;
+        var apiSettings = new ApiSettings { CacheSlidingExpirationSeconds = cacheSlidingExpirationSeconds };
+        var timeSpan = TimeSpan.FromSeconds(cacheSlidingExpirationSeconds);
+        var cacheEntryOptions = new MemoryCacheEntryOptions { SlidingExpiration = timeSpan };
+
+        const int storyId1 = 1;
+
+        var story1 = new Story();
+
+        var storyDto1 = new StoryDto { Score = 1 };
+
+        IEnumerable<int> storyIds = new List<int> { storyId1 };
+
+        _httpClientHandler.Setup(x => x.GetIds()).ReturnsAsync(storyIds);
+        _httpClientHandler.Setup(x => x.GetEntityById(storyId1)).ReturnsAsync(story1);
+
+        _mapper.Setup(x => x.Map<Story, StoryDto>(story1)).Returns(storyDto1);
+
+        _apiSettings.Setup(x => x.Value).Returns(apiSettings);
+
+        _factory.Setup(x => x.Create(timeSpan)).Returns(cacheEntryOptions);
+
+        await _service.GetTheBestStories(10); //1st call
+
+        Thread.Sleep(timeSpan); //wait for the cache to expire
+
+        await _service.GetTheBestStories(10); //2nd call 
+
+        _httpClientHandler.Verify(x => x.GetIds(), Times.Exactly(2));
+        _httpClientHandler.Verify(x => x.GetEntityById(storyId1), Times.Exactly(2));
+        _mapper.Verify(x => x.Map<Story, StoryDto>(story1), Times.Exactly(2));
+        _factory.Verify(x => x.Create(timeSpan), Times.Exactly(2));
+        _apiSettings.Verify(x => x.Value, Times.Exactly(2));
+    }
 }

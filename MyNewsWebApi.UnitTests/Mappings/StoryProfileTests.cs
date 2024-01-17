@@ -27,14 +27,14 @@ public class StoryProfileTests
     }
 
     [Fact]
-    public void Entity_CommentCount_is_equal_to_Dto_CommentCount_Test()
+    public void Entity_Kids_count_is_equal_to_Dto_CommentCount_Test()
     {
-        var entity = new Story{ CommentCount = 1 };
+        var entity = new Story{ Kids = [1,2,3,4,5,6,7]};
 
         var dto = _mapper?.Map<Story, StoryDto>(entity);
 
         Assert.NotNull(dto?.CommentCount);
-        Assert.Equal(entity.CommentCount, dto.CommentCount);
+        Assert.Equal(entity.Kids.Length, dto.CommentCount);
     }
 
     [Fact]

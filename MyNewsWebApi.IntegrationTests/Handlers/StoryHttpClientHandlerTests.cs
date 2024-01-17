@@ -11,8 +11,7 @@ public class StoryHttpClientHandlerTests
 
         var ids = await handler.GetIds();
 
-        Assert.NotNull(ids);
-        Assert.NotEmpty(ids);
+        Assert.NotEmpty(ids!);
     }
 
     [Fact]
@@ -22,9 +21,7 @@ public class StoryHttpClientHandlerTests
 
         var ids = await handler.GetIds();
 
-        Assert.NotNull(ids);
-
-        var entity = await handler.GetEntityById(ids.Last());
+        var entity = await handler.GetEntityById(ids!.Last());
 
         Assert.NotNull(entity);
     }

@@ -27,7 +27,7 @@ public class NewsStoryService(
             {
                 story = await storyHttpClientHandler.GetEntityById(id);
 
-                var cacheEntryOptions = cacheEntryOptionsFactory.Create(TimeSpan.FromMicroseconds(apiSettings.Value.CacheSlidingExpirationSeconds));
+                var cacheEntryOptions = cacheEntryOptionsFactory.Create(TimeSpan.FromSeconds(apiSettings.Value.CacheSlidingExpirationSeconds));
 
                 cache.Set(id, story, cacheEntryOptions);
             }
