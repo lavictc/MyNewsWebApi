@@ -13,7 +13,7 @@ namespace MyNewsWebApi.Mappings
                     opt => opt.MapFrom(src => DateTimeOffset.FromUnixTimeSeconds(src.Time).LocalDateTime.ToString("yyyy-MM-ddTHH:mm:ss")))
                 .ForMember(dest => dest.PostedBy,
                     opt => opt.MapFrom(src => src.By))
-                .ForMember(dest => dest.CommentCount, opt => opt.MapFrom(src => src.Kids!.Length));
+                .ForMember(dest => dest.CommentCount, opt => opt.MapFrom(src => src.Descendants));
         }
     }
 }

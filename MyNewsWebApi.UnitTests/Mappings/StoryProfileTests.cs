@@ -27,25 +27,14 @@ public class StoryProfileTests
     }
 
     [Fact]
-    public void Entity_Kids_count_is_equal_to_Dto_CommentCount_Test()
+    public void Entity_Descendants_is_equal_to_Dto_CommentCount_Test()
     {
-        var entity = new Story{ Kids = [1,2,3,4,5,6,7]};
+        var entity = new Story{ Descendants = 12 };
 
         var dto = _mapper?.Map<Story, StoryDto>(entity);
 
         Assert.NotNull(dto?.CommentCount);
-        Assert.Equal(entity.Kids.Length, dto.CommentCount);
-    }
-
-    [Fact]
-    public void Null_Entity_Kids_is_equal_to_zero_in_dto_Test()
-    {
-        var entity = new Story { Kids = null };
-
-        var dto = _mapper?.Map<Story, StoryDto>(entity);
-
-        Assert.NotNull(dto?.CommentCount);
-        Assert.Equal(0, dto.CommentCount);
+        Assert.Equal(entity.Descendants, dto.CommentCount);
     }
 
     [Fact]

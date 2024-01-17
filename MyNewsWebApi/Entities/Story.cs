@@ -19,6 +19,6 @@ public class Story
     [JsonPropertyName("score")]
     public int  Score { get; init; }
 
-    [JsonPropertyName("kids")]
-    public int[]?  Kids { get; init; }
+    [JsonPropertyName("descendants")]
+    public int Descendants { get; init; }
 }
